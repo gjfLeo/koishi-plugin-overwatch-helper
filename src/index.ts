@@ -4,26 +4,16 @@ import type { Context, Session } from "koishi";
 import type { OwHero, OwRankEnum, OwSeason } from "./types";
 
 import { h, Schema } from "koishi";
-import { Extension, Failed, Success, Tool, withInnerThoughts } from "koishi-plugin-yesimbot/services";
-import { Services } from "koishi-plugin-yesimbot/shared";
 import { zRank } from "./types";
 import { getHeroStatisticsChart, getPickRateChart } from "./utils/chart";
 import { fetchBaseData, fetchLeaderboard, normalizeHeroId, normalizeRank, ranks } from "./utils/data";
 
 interface ConfigType {}
 
-@Extension({
-  name: "ow-helper",
-  display: "守望先锋助手",
-  description: "提供《守望先锋》相关的功能。",
-  author: "gjfleo",
-  version: "1.0.0",
-})
 export default class OverwatchHelper {
   static name = "ow-helper";
   static inject = {
     required: ["cache", "g2", "skia"],
-    optional: [Services.Tool],
   };
 
   static Config: Schema<ConfigType> = Schema.object({});
@@ -40,15 +30,15 @@ export default class OverwatchHelper {
 
     ctx.command("ow", "守望先锋助手");
 
-    ctx.command("ow.选取率 [段位]", "根据段位（可选）查询选取率统计图")
-      .alias("ow.使用率")
+    ctx.command("ow.使用率 [段位]", "根据段位（可选）查询选取率统计图")
+      .alias("ow.选取率")
       .action(async ({ session }, rank) => {
         this.sendPickRateActionChart({ session, rank });
       });
 
-    ctx.command("ow.英雄 <英雄>", "查询指定英雄的统计数据")
+    ctx.command("ow.英雄 <英雄名称>", "查询指定英雄的统计数据")
       .action(async ({ session }, hero) => {
-        this.sendHeroStatisticsChart({ session, hero });
+        this.sendHeroStatisticsChart({ session, heroName: hero });
       });
   }
 
@@ -69,22 +59,12 @@ export default class OverwatchHelper {
     );
   }
 
-  @Tool({
-    name: "ow-helper-pick-rate",
-    description: "发送《守望先锋》英雄选取率和禁用率统计图。",
-    parameters: withInnerThoughts({
-      rank: Schema
-        .string()
-        .required(false)
-        .description("要查询的段位，不填则不限段位"),
-    }),
-  })
-  private async sendPickRateActionChart({
-    session,
-    rank,
-  }: { session: Session; rank?: string }) {
+  private async sendPickRateActionChart({ session, rank }: {
+    session: Session;
+    rank?: string;
+  }) {
     if (!session) {
-      return Failed("只能在会话上下文中使用");
+      throw new Error("只能在会话上下文中使用");
     }
     const normalizedRank = normalizeRank(rank);
     const rankName = rank ? ranks[rank] : "全段位";
@@ -113,29 +93,19 @@ export default class OverwatchHelper {
     );
     const dataUrl = await chart.toDataURL("png");
     session.send(h("img", { src: dataUrl }));
-    return Success();
   }
 
-  @Tool({
-    name: "ow-helper-hero-statistics",
-    description: "发送《守望先锋》特定英雄的各段位统计信息图。",
-    parameters: withInnerThoughts({
-      hero: Schema
-        .string()
-        .required(true)
-        .description("要查询的英雄"),
-    }),
-  })
-  private async sendHeroStatisticsChart({
-    session,
-    hero,
+  private async sendHeroStatisticsChart({ session, heroName }: {
+    session: Session;
+    heroName?: string;
   }) {
     if (!session) {
-      return Failed("只能在会话上下文中使用");
+      throw new Error("只能在会话上下文中使用");
     }
-    const heroId = normalizeHeroId(hero, this.heroes);
+    const heroId = normalizeHeroId(heroName, this.heroes);
     if (!heroId) {
-      return Failed("未找到指定英雄");
+      session.send(`未找到指定英雄。全部英雄：${Object.values(this.heroes).map(hero => hero.name).join("、")}`);
+      return;
     }
     const heroData = this.heroes[heroId];
 
@@ -167,24 +137,6 @@ export default class OverwatchHelper {
     const backgroundImage = await this.ctx.skia.loadImage(heroData.pictures["960x666"]);
     const canvasContext = canvas.getContext("2d");
     canvasContext.drawImage(backgroundImage, -80, 0);
-    // {
-    //   const [x, y, w, h, r] = [30, 30, 900, 300, 10];
-    //   canvasContext.save();
-    //   canvasContext.beginPath();
-    //   canvasContext.moveTo(x + r, y);
-    //   canvasContext.lineTo(x + w - r, y);
-    //   canvasContext.arcTo(x + w, y, x + w, y + r, r);
-    //   canvasContext.lineTo(x + w, y + h - r);
-    //   canvasContext.arcTo(x + w, y + h, x + w - r, y + h, r);
-    //   canvasContext.lineTo(x + r, y + h);
-    //   canvasContext.arcTo(x, y + h, x, y + h - r, r);
-    //   canvasContext.lineTo(x, y + r);
-    //   canvasContext.arcTo(x, y, x + r, y, r);
-    //   canvasContext.closePath();
-    //   canvasContext.clip();
-    //   canvasContext.drawCanvas(chart, x, y, w, h);
-    //   canvasContext.restore();
-    // }
 
     const chart = await this.ctx.g2.createChart(
       getHeroStatisticsChart({
@@ -199,10 +151,9 @@ export default class OverwatchHelper {
     canvasContext.textAlign = "center";
     canvasContext.textBaseline = "top";
     canvasContext.fillStyle = "rgba(255, 255, 255, 0.25)";
-    canvasContext.fillText(`国服 ${date} 数据来源于官网`, canvas.width / 2, 10);
+    canvasContext.fillText(`统计于${date} 数据来源于国服官网`, canvas.width / 2, 10);
 
     const dataUrl = await canvas.toDataURL("png");
     session.send(h("img", { src: dataUrl }));
-    return Success();
   }
 }

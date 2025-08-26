@@ -1,6 +1,6 @@
 {
   "name": "@gjfleo/koishi-plugin-overwatch-helper",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "提供《守望先锋》相关的数据查询等功能。",
   "license": "MIT",
   "repository": {
@@ -8,12 +8,14 @@
     "url": "git+https://github.com/gjfleo/koishi-plugin-overwatch-helper.git"
   },
   "publishConfig": {
+    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "overwatch"
   ],
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -28,8 +30,10 @@
   "dependencies": {
     "@satorijs/element": "^3.1.8",
     "destr": "^2.0.5",
-    "koishi-plugin-yesimbot": "3.0.0-canary.20250812163949",
     "ofetch": "^1.4.1",
     "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@gjfleo/koishi-plugin-g2": "^1.0.0"
   }
 }
