@@ -157,16 +157,17 @@ export function normalizeRank(rank?: string): z.infer<typeof zRank> | undefined 
 
 const heroAlias: Record<string, string> = {
   麦克雷: "卡西迪",
+  士兵76: "士兵：76",
 };
 export function normalizeHeroId(keyword: string, heroes: Record<string, OwHero>) {
   if (heroAlias[keyword]) {
     return normalizeHeroId(heroAlias[keyword], heroes);
   }
   for (const [heroId, hero] of Object.entries(heroes)) {
-    if (heroId === keyword) {
+    if (heroId === keyword.toLocaleLowerCase()) {
       return heroId;
     }
-    if (hero.name === keyword) {
+    if (hero.name.toLocaleLowerCase() === keyword.toLocaleLowerCase()) {
       return heroId;
     }
   }
