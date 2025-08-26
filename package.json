@@ -1,6 +1,6 @@
 {
   "name": "@gjfleo/koishi-plugin-overwatch-helper",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "提供《守望先锋》相关的数据查询等功能。",
   "license": "MIT",
   "repository": {
