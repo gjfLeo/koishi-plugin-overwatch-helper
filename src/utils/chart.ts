@@ -142,15 +142,12 @@ export function getHeroStatisticsChart({
           x: {
             title: false,
             labelFormatter: (v: OwRankEnum) => ranks[v],
-            // labelFill: "white",
             labelFontSize: 20,
             labelOpacity: 0.75,
           },
           y: {
-            // titleFill: "white",
-            // labelFill: "white",
-            // gridStroke: "white",
-            // gridStrokeOpacity: 0.6,
+            title: "选取率 (%)",
+            titleOpacity: 0.75,
           },
         },
       },
@@ -177,9 +174,9 @@ export function getHeroStatisticsChart({
         },
         axis: {
           y: {
+            title: "胜率 (%)",
+            titleOpacity: 0.75,
             position: "right",
-            // titleFill: "white",
-            // labelFill: "white",
             grid: false,
           },
         },
